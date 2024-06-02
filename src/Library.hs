@@ -135,6 +135,7 @@ fueraDeCombate nave = durabilidad nave == 0
 1. Naves débiles: Son aquellas naves que tienen menos de 200 de escudo.
 2. Naves con cierta peligrosidad: Son aquellas naves que tienen un ataque mayor a un valor dado. Por ejemplo, en alguna misión se podría utilizar una estrategia de peligrosidad mayor a 300, y en otra una estrategia de peligrosidad mayor a 100.
 3. Naves que quedarían fuera de combate: Son aquellas naves de la flota que luego del ataque de la nave atacante quedan fuera de combate. 
-4. Inventar una nueva estrategia -]
+4. Inventar una nueva estrategia -}
+
 
 
