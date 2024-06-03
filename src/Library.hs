@@ -137,5 +137,70 @@ fueraDeCombate nave = durabilidad nave == 0
 3. Naves que quedarían fuera de combate: Son aquellas naves de la flota que luego del ataque de la nave atacante quedan fuera de combate. 
 4. Inventar una nueva estrategia -}
 
+--mision sorpresa (nave + estrategia ) --> como que queda una flota enemiga (lista de naves)
+--estrategia = condicion de la naveAtacante decide atacar o NO a una cierta nave de la flota 
+--mision sorpresa (nave + estrategia) --> atacar TODAS aquellas naves de la flota que la estrategia determina que conviene atacar 
 
+misionSorpresa :: Nave -> Estrategia -> Flota -> Flota
+misionSorpresa naveAtacante estraregia flota = mapSelectivo (atacar naveAtacante) estraregia flota 
 
+mapSelectivo :: (a -> a) -> (a -> Bool) -> [a] -> [a]  -- hago un cambio solo a los elementos de la lista que cumplen con una condicion y lo concatero con la lista de elementos que NO cumplen con la condicion
+mapSelectivo cambio condicion lista = map cambio (filter condicion lista) ++ filter (not.condicion) lista
+
+-- una estraregia es una condicion Por la cual la nave atacante decide atacar o no una cierta nave de la flota. (ES UN BOOLEANO)
+type Estrategia = Nave -> Bool  -- (las estrategia son condiciones de las naves)
+
+naveDebil :: Estrategia
+naveDebil nave = escudo nave < 200
+
+naveConCiertaPeliegrosidad :: Number -> Estrategia
+naveConCiertaPeliegrosidad valor nave = ataque nave > valor
+
+naveFueraDeCombate :: Nave -> Estrategia  -- la naveAtacada queda con la durabilidad en 0 luego del ataque
+naveFueraDeCombate naveAtacante naveAtacada = fueraDeCombate (atacar naveAtacante naveAtacada)
+
+-- 6) Considerando una nave y una flota enemiga en particular, dadas dos estrategias, determinar 
+-- cuál de ellas es la que minimiza la durabilidad total de la flota atacada y llevar adelante una misión con ella
+
+misionConMejorEstrategia :: Nave -> Estrategia -> Estrategia -> Flota -> Flota
+misionConMejorEstrategia naveAtacante estrategia1 estrategia2 flota
+    | tieneMenorDurabilidad naveAtacante estrategia1 estrategia2 flota = misionSorpresa naveAtacante estrategia1 flota
+    | otherwise = misionSorpresa naveAtacante estrategia2 flota
+
+tieneMenorDurabilidad :: Nave -> Estrategia -> Estrategia -> Flota -> Bool
+tieneMenorDurabilidad naveAtacante estrategia1 estrategia2 flota = durabilidadTotal (misionSorpresa naveAtacante estrategia1 flota) < durabilidadTotal (misionSorpresa naveAtacante estrategia2 flota)
+
+-- o tambien se puede hacer asi (pimero los guardas y que me devuelva la estrategia y despues la pongo en la misionSorpresa)
+
+atarcarConMejorEstrategia :: Nave -> Estrategia -> Estrategia -> Flota -> Flota
+atarcarConMejorEstrategia naveAtacante estrategia1 estrategia2 flota = misionSorpresa naveAtacante (mejorEstrategia naveAtacante estrategia1 estrategia2 flota) flota
+
+mejorEstrategia :: Nave -> Estrategia -> Estrategia -> Flota -> Estrategia
+mejorEstrategia naveAtacante estrategia1 estrategia2 flota
+    | durabilidadTotal (misionSorpresa naveAtacante estrategia1 flota) < durabilidadTotal (misionSorpresa naveAtacante estrategia2 flota) = estrategia1
+    | otherwise = estrategia2
+
+-- 7) Construir una flota infinita de naves. 
+
+flotaInfinita :: Flota
+flotaInfinita = cycle [tieFighter,xWing]
+
+-- ¿Es posible determinar su durabilidad total? 
+
+--durabilidadTotal :: Flota -> Number           NO es posible determinar la durabilidad total de una lista infinita porque 
+--durabilidadTotal = sum . map durabilidad      para determinar dicho campo necesito hacer la sumatoria de una lista de 
+--                                              durabalidades que resulto infinita
+
+-- ¿Qué se obtiene como respuesta cuando se lleva adelante una misión sobre ella? Justificar conceptualmente.
+--misionSorpresa :: Nave -> Estrategia -> Flota -> Flota
+--misionSorpresa naveAtacante estraregia flota = mapSelectivo (atacar naveAtacante) estraregia flota
+
+-- Como la lista de naves es infinita va a poseer infinitas naves que cumplen con una condicon (y por eso seran atacadas) y 
+-- otras infinitas naves que no cumplen con la condicion (y por eso no seran atacadas). Por lo tanto me devolvera como 
+-- respuesta una flota con una cantidad de naves que fueron atacadas (pueden ser infinitas o 0) y una cantidad de naves 
+-- que fueron NO fueron atacadas (pueden ser infinitas o 0). Tener en cuenta que AMBAS no pueden ser 0 porque una nave puede o NO 
+-- puede cumplir la condicion (entonces es atacada o no) porque no existe una nave que cumpla y a la vez no cumpla la condicion.
+-- Los casos que se pueden dar son :
+--  * infinitas naves que cumplen con la condicion y cero que no cumplen (TODAS CUMPLEN)
+--  * infinitas naves que NO cumplen con la condicion y cero que cumples (TODAS NO CUMPLEN)
+--  * infinitas naves que cumplen e infinitas naves que NO cumplen (CUMPLEN O NO CUMPLEN)
